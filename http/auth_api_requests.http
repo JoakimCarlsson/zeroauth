@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080
-@email = admin@admin.com
+@email = admin@example.comss
 @password = YoushallNotUseMyPassword123!
 @accessToken = ACCESS_TOKEN
 @refreshToken = REFRESH_TOKEN

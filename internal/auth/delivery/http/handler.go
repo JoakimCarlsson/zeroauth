@@ -35,8 +35,11 @@ func (h *AuthHandler) Register(
 		return
 	}
 
+	//check if email is already registered, if so return error
+	//check if user is blocked due to too many failed attempts, if so return error etc
+
 	if err := h.useCase.Register(req.Email, req.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Unkown error", http.StatusInternalServerError)
 		return
 	}
 
@@ -67,7 +70,7 @@ func (h *AuthHandler) Login(
 	accessToken, refreshToken, err := h.useCase.Login(req.Email, req.Password)
 	if err != nil {
 		h.tracker.AddAttempt(req.Email, false)
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
