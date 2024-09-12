@@ -20,7 +20,11 @@ func (r *authRepository) CreateUser(user *auth.User) error {
 	return err
 }
 
-func (r *authRepository) CreateRefreshToken(userID int, token string, expiresAt time.Time) error {
+func (r *authRepository) CreateRefreshToken(
+	userID int,
+	token string,
+	expiresAt time.Time,
+) error {
 	_, err := r.db.Exec("INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)",
 		userID, token, expiresAt)
 	return err

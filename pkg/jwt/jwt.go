@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
+	"github.com/joakimcarlsson/zeroauth/pkg/token"
 )
 
 type Service interface {
 	GenerateAccessToken(userID int) (string, error)
-	GenerateRefreshToken() (string, error)
+	GenerateRefreshToken(userID int) (string, error)
 	ValidateAccessToken(token string) (int, error)
 	GetRefreshTokenExpiry() time.Duration
 }
@@ -19,14 +19,23 @@ type jwtService struct {
 	refreshSecretKey []byte
 	accessExpiry     time.Duration
 	refreshExpiry    time.Duration
+	tokenService     token.Service
+	tokenStrategy    token.Strategy
 }
 
-func NewJWTService(accessSecret, refreshSecret string, accessExpiry, refreshExpiry time.Duration) Service {
+func NewJWTService(
+	accessSecret, refreshSecret string,
+	accessExpiry, refreshExpiry time.Duration,
+	tokenService token.Service,
+	tokenStrategy token.Strategy,
+) Service {
 	return &jwtService{
 		accessSecretKey:  []byte(accessSecret),
 		refreshSecretKey: []byte(refreshSecret),
 		accessExpiry:     accessExpiry,
 		refreshExpiry:    refreshExpiry,
+		tokenService:     tokenService,
+		tokenStrategy:    tokenStrategy,
 	}
 }
 
@@ -39,8 +48,8 @@ func (s *jwtService) GenerateAccessToken(userID int) (string, error) {
 	return token.SignedString(s.accessSecretKey)
 }
 
-func (s *jwtService) GenerateRefreshToken() (string, error) {
-	return uuid.NewString(), nil
+func (s *jwtService) GenerateRefreshToken(userID int) (string, error) {
+	return s.tokenService.GenerateRefreshToken(userID, s.tokenStrategy)
 }
 
 func (s *jwtService) ValidateAccessToken(tokenString string) (int, error) {

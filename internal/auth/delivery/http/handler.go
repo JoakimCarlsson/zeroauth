@@ -15,7 +15,10 @@ func NewAuthHandler(useCase auth.UseCase) *AuthHandler {
 	return &AuthHandler{useCase: useCase}
 }
 
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -36,7 +39,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -60,7 +66,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) RefreshToken(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}
@@ -83,7 +92,10 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Logout(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`
 	}

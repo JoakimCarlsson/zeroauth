@@ -14,6 +14,7 @@ import (
 	"github.com/joakimcarlsson/zeroauth/internal/middleware"
 	"github.com/joakimcarlsson/zeroauth/pkg/hash"
 	"github.com/joakimcarlsson/zeroauth/pkg/jwt"
+	"github.com/joakimcarlsson/zeroauth/pkg/token"
 )
 
 type Server struct {
@@ -21,18 +22,25 @@ type Server struct {
 	router *http.ServeMux
 }
 
-func NewServer(cfg *config.Config, db *sql.DB) *Server {
+func NewServer(
+	cfg *config.Config,
+	db *sql.DB,
+) *Server {
 	s := &Server{
 		cfg:    cfg,
 		router: http.NewServeMux(),
 	}
 
 	hashService := hash.NewBcryptService()
+	tokenService := token.NewTokenService(32)
+
 	jwtService := jwt.NewJWTService(
 		cfg.JWTAccessSecret,
 		cfg.JWTRefreshSecret,
 		time.Minute*15,
 		time.Hour*24*7,
+		tokenService,
+		token.StrategyComposite,
 	)
 
 	authRepo := authRepo.NewAuthRepository(db)
