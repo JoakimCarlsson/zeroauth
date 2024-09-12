@@ -52,11 +52,11 @@ func NewServer(
 	authUseCase := authUseCase.NewAuthUseCase(authRepo, hashService, jwtService)
 	authHandler := authHttp.NewAuthHandler(authUseCase)
 
-	s.router.HandleFunc("/register", middleware.RateLimitMiddleware(limiter)(authHandler.Register))
-	s.router.HandleFunc("/login", middleware.RateLimitMiddleware(limiter)(authHandler.Login))
-	s.router.HandleFunc("/refresh", middleware.RateLimitMiddleware(limiter)(authHandler.RefreshToken))
-	s.router.HandleFunc("/logout", authHandler.Logout)
-	s.router.HandleFunc("/protected", middleware.AuthMiddleware(jwtService)(protectedHandler))
+	s.router.HandleFunc("/register", middleware.AuditLogMiddleware(middleware.RateLimitMiddleware(limiter)(authHandler.Register)))
+	s.router.HandleFunc("/login", middleware.AuditLogMiddleware(middleware.RateLimitMiddleware(limiter)(authHandler.Login)))
+	s.router.HandleFunc("/refresh", middleware.AuditLogMiddleware(middleware.RateLimitMiddleware(limiter)(authHandler.RefreshToken)))
+	s.router.HandleFunc("/logout", middleware.AuditLogMiddleware(authHandler.Logout))
+	s.router.HandleFunc("/protected", middleware.AuditLogMiddleware(middleware.AuthMiddleware(jwtService)(protectedHandler)))
 
 	return s
 }
