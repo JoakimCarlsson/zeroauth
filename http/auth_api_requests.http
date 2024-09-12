@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:8080
+@email = admin@example.comss
+@password = YoushallNotUseMyPassword123!
+@accessToken = ACCESS_TOKEN
+@refreshToken = REFRESH_TOKEN
+
+### Register a new user
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### Login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "{{email}}",
+    "password": "{{password}}"
+}
+
+### Refresh Token
+POST {{baseUrl}}/refresh
+Content-Type: application/json
+
+{
+    "refresh_token": "{{refreshToken}}"
+}
+
+### Logout
+POST {{baseUrl}}/logout
+Content-Type: application/json
+
+{
+    "refresh_token": "{{refreshToken}}"
+}
+
+### Access Protected Route
+GET {{baseUrl}}/protected
+Authorization: Bearer {{accessToken}}
