@@ -18,8 +18,7 @@ type authUseCase struct {
 func NewAuthUseCase(
 	repo auth.Repository,
 	hashService hash.Service,
-	jwtService jwt.Service,
-) auth.UseCase {
+	jwtService jwt.Service) auth.UseCase {
 	return &authUseCase{
 		repo:        repo,
 		hashService: hashService,
@@ -86,7 +85,7 @@ func (uc *authUseCase) RefreshToken(refreshToken string) (string, string, error)
 		return "", "", err
 	}
 
-	newRefreshToken, err := uc.jwtService.GenerateRefreshToken(storedToken.ID)
+	newRefreshToken, err := uc.jwtService.GenerateRefreshToken(storedToken.UserID)
 	if err != nil {
 		return "", "", err
 	}
