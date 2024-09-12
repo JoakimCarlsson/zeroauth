@@ -4,33 +4,48 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 type Service interface {
-	Generate(userID int) (string, error)
-	Validate(token string) (int, error)
+	GenerateAccessToken(userID int) (string, error)
+	GenerateRefreshToken() (string, error)
+	ValidateAccessToken(token string) (int, error)
+	GetRefreshTokenExpiry() time.Duration
 }
 
 type jwtService struct {
-	secretKey []byte
+	accessSecretKey  []byte
+	refreshSecretKey []byte
+	accessExpiry     time.Duration
+	refreshExpiry    time.Duration
 }
 
-func NewJWTService(secretKey string) Service {
-	return &jwtService{secretKey: []byte(secretKey)}
+func NewJWTService(accessSecret, refreshSecret string, accessExpiry, refreshExpiry time.Duration) Service {
+	return &jwtService{
+		accessSecretKey:  []byte(accessSecret),
+		refreshSecretKey: []byte(refreshSecret),
+		accessExpiry:     accessExpiry,
+		refreshExpiry:    refreshExpiry,
+	}
 }
 
-func (s *jwtService) Generate(userID int) (string, error) {
+func (s *jwtService) GenerateAccessToken(userID int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(s.accessExpiry).Unix(),
 	})
 
-	return token.SignedString(s.secretKey)
+	return token.SignedString(s.accessSecretKey)
 }
 
-func (s *jwtService) Validate(tokenString string) (int, error) {
+func (s *jwtService) GenerateRefreshToken() (string, error) {
+	return uuid.NewString(), nil
+}
+
+func (s *jwtService) ValidateAccessToken(tokenString string) (int, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return s.secretKey, nil
+		return s.accessSecretKey, nil
 	})
 
 	if err != nil {
@@ -43,4 +58,8 @@ func (s *jwtService) Validate(tokenString string) (int, error) {
 	}
 
 	return 0, jwt.ErrSignatureInvalid
+}
+
+func (s *jwtService) GetRefreshTokenExpiry() time.Duration {
+	return s.refreshExpiry
 }

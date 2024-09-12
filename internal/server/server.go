@@ -2,8 +2,9 @@
 
 import (
 	"database/sql"
-	"fmt"
+	"encoding/json"
 	"net/http"
+	"time"
 
 	authHttp "github.com/joakimcarlsson/zeroauth/internal/auth/delivery/http"
 	authRepo "github.com/joakimcarlsson/zeroauth/internal/auth/repository/postgres"
@@ -27,7 +28,12 @@ func NewServer(cfg *config.Config, db *sql.DB) *Server {
 	}
 
 	hashService := hash.NewBcryptService()
-	jwtService := jwt.NewJWTService(cfg.JWTSecret)
+	jwtService := jwt.NewJWTService(
+		cfg.JWTAccessSecret,
+		cfg.JWTRefreshSecret,
+		time.Minute*15,
+		time.Hour*24*7,
+	)
 
 	authRepo := authRepo.NewAuthRepository(db)
 	authUseCase := authUseCase.NewAuthUseCase(authRepo, hashService, jwtService)
@@ -35,14 +41,20 @@ func NewServer(cfg *config.Config, db *sql.DB) *Server {
 
 	s.router.HandleFunc("/register", authHandler.Register)
 	s.router.HandleFunc("/login", authHandler.Login)
-	s.router.HandleFunc("/protected", middleware.AuthMiddleware(jwtService)(s.protectedHandler))
+	s.router.HandleFunc("/refresh", authHandler.RefreshToken)
+	s.router.HandleFunc("/logout", authHandler.Logout)
+	s.router.HandleFunc("/protected", middleware.AuthMiddleware(jwtService)(protectedHandler))
 
 	return s
 }
 
-func (s *Server) protectedHandler(w http.ResponseWriter, r *http.Request) {
+func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id")
-	fmt.Fprintf(w, "Protected route accessed by user %v", userID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Protected route accessed successfully",
+		"user_id": userID,
+	})
 }
 
 func (s *Server) Start() error {

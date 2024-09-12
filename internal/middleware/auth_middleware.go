@@ -23,7 +23,7 @@ func AuthMiddleware(jwtService jwt.Service) func(http.HandlerFunc) http.HandlerF
 				return
 			}
 
-			userID, err := jwtService.Validate(bearerToken[1])
+			userID, err := jwtService.ValidateAccessToken(bearerToken[1])
 			if err != nil {
 				http.Error(w, "Invalid token", http.StatusUnauthorized)
 				return
