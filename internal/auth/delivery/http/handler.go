@@ -3,16 +3,22 @@
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/joakimcarlsson/zeroauth/internal/auth"
+	"github.com/joakimcarlsson/zeroauth/internal/auth/attempt"
 )
 
 type AuthHandler struct {
 	useCase auth.UseCase
+	tracker *attempt.Tracker
 }
 
 func NewAuthHandler(useCase auth.UseCase) *AuthHandler {
-	return &AuthHandler{useCase: useCase}
+	return &AuthHandler{
+		useCase: useCase,
+		tracker: attempt.NewTracker(5, 15*time.Minute),
+	}
 }
 
 func (h *AuthHandler) Register(
@@ -53,11 +59,20 @@ func (h *AuthHandler) Login(
 		return
 	}
 
+	if h.tracker.ShouldBlock(req.Email) {
+		http.Error(w, "Too many failed attempts. Please try again later.", http.StatusTooManyRequests)
+		return
+	}
+
 	accessToken, refreshToken, err := h.useCase.Login(req.Email, req.Password)
 	if err != nil {
+		h.tracker.AddAttempt(req.Email, false)
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
+	h.tracker.AddAttempt(req.Email, true)
+	h.tracker.ResetAttempts(req.Email)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
