@@ -41,6 +41,8 @@ func NewServer(
 		time.Hour*24*7,
 		tokenService,
 		token.StrategyComposite,
+		cfg.BaseURL,
+		cfg.BaseURL,
 	)
 
 	authRepo := authRepo.NewAuthRepository(db)
