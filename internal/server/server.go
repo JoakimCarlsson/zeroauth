@@ -9,6 +9,7 @@ import (
 	authHttp "github.com/joakimcarlsson/zeroauth/internal/auth/delivery/http"
 	authRepo "github.com/joakimcarlsson/zeroauth/internal/auth/repository/postgres"
 	authUseCase "github.com/joakimcarlsson/zeroauth/internal/auth/usecase"
+	"golang.org/x/time/rate"
 
 	"github.com/joakimcarlsson/zeroauth/internal/config"
 	"github.com/joakimcarlsson/zeroauth/internal/middleware"
@@ -45,13 +46,15 @@ func NewServer(
 		cfg.BaseURL,
 	)
 
+	limiter := middleware.NewIPRateLimiter(rate.Limit(5), 10)
+
 	authRepo := authRepo.NewAuthRepository(db)
 	authUseCase := authUseCase.NewAuthUseCase(authRepo, hashService, jwtService)
 	authHandler := authHttp.NewAuthHandler(authUseCase)
 
-	s.router.HandleFunc("/register", authHandler.Register)
-	s.router.HandleFunc("/login", authHandler.Login)
-	s.router.HandleFunc("/refresh", authHandler.RefreshToken)
+	s.router.HandleFunc("/register", middleware.RateLimitMiddleware(limiter)(authHandler.Register))
+	s.router.HandleFunc("/login", middleware.RateLimitMiddleware(limiter)(authHandler.Login))
+	s.router.HandleFunc("/refresh", middleware.RateLimitMiddleware(limiter)(authHandler.RefreshToken))
 	s.router.HandleFunc("/logout", authHandler.Logout)
 	s.router.HandleFunc("/protected", middleware.AuthMiddleware(jwtService)(protectedHandler))
 

@@ -8,4 +8,7 @@ require (
 	golang.org/x/crypto v0.27.0
 )
 
-require github.com/google/uuid v1.6.0 // indirect
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	golang.org/x/time v0.6.0 // indirect
+)
